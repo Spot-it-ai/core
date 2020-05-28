@@ -18,7 +18,7 @@ export class DbService {
       let urlObj = new VideoUrl();
       urlObj.setUrl(url.getUrl())
       if (!this.db.videos.findOne(urlObj)) {
-        this.db.videos.save(url);
+        return this.db.videos.save(url);
       }
     }
     catch (e) {
