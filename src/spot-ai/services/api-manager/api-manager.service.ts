@@ -7,6 +7,9 @@ import { VideoUrl } from 'src/spot-ai/models/video-url.model';
 import { ConfigService } from '@nestjs/config';
 import { Observable } from 'rxjs';
 import { AxiosResponse } from 'axios';
+import { ApiResponse } from 'src/spot-ai/models/api-response.model';
+import { Data } from 'src/spot-ai/models/data.model';
+import { WebResult } from 'src/spot-ai/models/web-result.model';
 
 @Injectable()
 export class ApiManagerService {
@@ -24,12 +27,21 @@ export class ApiManagerService {
     this.http = http;
   }
 
-  async searchQuery(query: string): Promise<any> {
+  async searchQuery(query: string): Promise<ApiResponse> {
     if (query) {
+      let apiResponse = new ApiResponse();
+      let dataResponse = new Data();
       try {
         let correctQuery = await this.spellCheck(query);
         let witAiResponse = await this.queryWitAi(correctQuery?.suggestion);
-        return witAiResponse;
+        let webSearchResults = await this.webSearch(correctQuery?.suggestion);
+        dataResponse.setWebResults(
+          this.processWebResults(webSearchResults.value)
+        );
+
+
+        apiResponse.setData(dataResponse);
+        return apiResponse;
       }
       catch (e) {
         console.log(e);
@@ -56,6 +68,34 @@ export class ApiManagerService {
     else {
       // error
     }
+  }
+
+  private processWebResults(results: any[]): WebResult[] {
+    let webResults = []
+    results.forEach((result: any) => {
+      let r = new WebResult(result?.title, result?.url, result?.description);
+      webResults.push(r);
+    })
+
+    return webResults;
+  }
+
+  private webSearch(query: string): Promise<any> {
+    let url = this.configService.get<string>("WEB_SEARCH_API_URL");
+    let token = this.configService.get<string>("WEB_SEARCH_API_KEY");
+    let queryUrl = url + query.trim();
+    let headers = {
+      "x-rapidapi-host": "contextualwebsearch-websearch-v1.p.rapidapi.com",
+      "x-rapidapi-key": token,
+      "useQueryString": true
+    };
+    return new Promise((resolve, reject) => {
+      this.http
+        .get(queryUrl, {headers: headers})
+        .subscribe((res: any) => {
+          resolve(res.data);
+        })
+    });
   }
 
   private spellCheck(query: string): Promise<any> {

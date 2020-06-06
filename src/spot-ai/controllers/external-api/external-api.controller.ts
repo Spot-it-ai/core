@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { ApiManagerService } from 'src/spot-ai/services/api-manager/api-manager.service';
 import { VideoUrlDto } from 'src/spot-ai/dto/video-url.dto';
+import { ApiResponse } from 'src/spot-ai/models/api-response.model';
 
 @Controller('api')
 export class ExternalApiController {
@@ -16,7 +17,7 @@ export class ExternalApiController {
   }
 
   @Get("search")
-  async search(@Query("query") query: string): Promise<any> {
+  async search(@Query("query") query: string): Promise<ApiResponse> {
     return await this.apiManager.searchQuery(query);
   }
 }
