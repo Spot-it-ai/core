@@ -24,14 +24,12 @@ export class ApiManagerService {
     this.http = http;
   }
 
-  searchQuery(query: string): Promise<any> {
+  async searchQuery(query: string): Promise<any> {
     if (query) {
       try {
-        return new Promise((resolve, reject) => {
-          this.queryWitAi(query).subscribe((res: any) => {
-            resolve(res?.data);
-          });
-        })
+        let correctQuery = await this.spellCheck(query);
+        let witAiResponse = await this.queryWitAi(correctQuery?.suggestion);
+        return witAiResponse;
       }
       catch (e) {
         console.log(e);
@@ -60,12 +58,36 @@ export class ApiManagerService {
     }
   }
 
-  private queryWitAi(query: string): Observable<AxiosResponse<any>> {
+  private spellCheck(query: string): Promise<any> {
+    let url = this.configService.get<string>("SPELL_CHECK_API_URL");
+    let token = this.configService.get<string>("SPELL_CHECK_API_KEY");
+    let queryUrl = url + query.trim();
+    let headers = {
+      "x-rapidapi-host": "montanaflynn-spellcheck.p.rapidapi.com",
+      "x-rapidapi-key": token,
+      "useQueryString": true
+    };
+    return new Promise((resolve, reject) => {
+      this.http
+        .get(queryUrl, {headers: headers})
+        .subscribe((res: any) => {
+          resolve(res.data);
+        })
+    });
+  }
+
+  private queryWitAi(query: string): Promise<any>{
     let url = this.configService.get<string>("WIT_AI_API_URL");
     let token = this.configService.get<string>("WIT_AI_API_KEY");
     let queryUrl = url + query.trim();
     let headers = {"Authorization": "Bearer " + token};
-    return this.http.get(queryUrl, {headers: headers});
+    return new Promise((resolve, reject) => {
+      this.http
+        .get(queryUrl, {headers: headers})
+        .subscribe((res: any) => {
+          resolve(res.data);
+        })
+    });
   }
 
   private transcribeVideo(url: string): void {
