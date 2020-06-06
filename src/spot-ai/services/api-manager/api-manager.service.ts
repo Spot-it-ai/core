@@ -1,19 +1,45 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpService } from '@nestjs/common';
 import * as fs from "fs";
 import * as childProcess from "child_process";
 import { DbService } from 'src/utils/services/db/db.service';
 import { VideoUrlDto } from 'src/spot-ai/dto/video-url.dto';
 import { VideoUrl } from 'src/spot-ai/models/video-url.model';
 import { ConfigService } from '@nestjs/config';
+import { Observable } from 'rxjs';
+import { AxiosResponse } from 'axios';
 
 @Injectable()
 export class ApiManagerService {
   private dbService: DbService;
   private configService: ConfigService;
+  private http: HttpService;
 
-  constructor(dbService: DbService, configService: ConfigService) {
+  constructor(
+    dbService: DbService,
+    configService: ConfigService,
+    http: HttpService
+  ) {
     this.dbService = dbService;
     this.configService = configService;
+    this.http = http;
+  }
+
+  searchQuery(query: string): Promise<any> {
+    if (query) {
+      try {
+        return new Promise((resolve, reject) => {
+          this.queryWitAi(query).subscribe((res: any) => {
+            resolve(res?.data);
+          });
+        })
+      }
+      catch (e) {
+        console.log(e);
+      }
+    }
+    else {
+      // error
+    }
   }
 
   saveVideoUrl(urlDto: VideoUrlDto): void {
@@ -32,6 +58,14 @@ export class ApiManagerService {
     else {
       // error
     }
+  }
+
+  private queryWitAi(query: string): Observable<AxiosResponse<any>> {
+    let url = this.configService.get<string>("WIT_AI_API_URL");
+    let token = this.configService.get<string>("WIT_AI_API_KEY");
+    let queryUrl = url + query.trim();
+    let headers = {"Authorization": "Bearer " + token};
+    return this.http.get(queryUrl, {headers: headers});
   }
 
   private transcribeVideo(url: string): void {

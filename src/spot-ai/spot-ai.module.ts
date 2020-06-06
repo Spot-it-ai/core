@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, HttpModule } from '@nestjs/common';
 import { ExternalApiController } from './controllers/external-api/external-api.controller';
 import { ApiManagerService } from './services/api-manager/api-manager.service';
 import { UtilsModule } from 'src/utils/utils.module';
 
 @Module({
-  imports: [UtilsModule],
+  imports: [UtilsModule, HttpModule],
   controllers: [ExternalApiController],
   providers: [ApiManagerService],
 })
