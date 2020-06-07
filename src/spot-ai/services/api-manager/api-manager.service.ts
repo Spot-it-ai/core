@@ -10,21 +10,25 @@ import { AxiosResponse } from 'axios';
 import { ApiResponse } from 'src/spot-ai/models/api-response.model';
 import { Data } from 'src/spot-ai/models/data.model';
 import { WebResult } from 'src/spot-ai/models/web-result.model';
+import { SearchResultsScrapperService } from '../search-results-scrapper/search-results-scrapper.service';
 
 @Injectable()
 export class ApiManagerService {
   private dbService: DbService;
   private configService: ConfigService;
   private http: HttpService;
+  private webSearch: SearchResultsScrapperService;
 
   constructor(
     dbService: DbService,
     configService: ConfigService,
-    http: HttpService
+    http: HttpService,
+    webSearch: SearchResultsScrapperService
   ) {
     this.dbService = dbService;
     this.configService = configService;
     this.http = http;
+    this.webSearch = webSearch;
   }
 
   async searchQuery(query: string): Promise<ApiResponse> {
@@ -33,11 +37,11 @@ export class ApiManagerService {
       let dataResponse = new Data();
       try {
         let correctQuery = await this.spellCheck(query);
-        let witAiResponse = await this.queryWitAi(correctQuery?.suggestion);
-        let webSearchResults = await this.webSearch(correctQuery?.suggestion);
-        dataResponse.setWebResults(
-          this.processWebResults(webSearchResults.value)
-        );
+        let searchQuery = correctQuery?.suggestion ?? query;
+        let witAiResponse = await this.queryWitAi(searchQuery);
+        let webSearchResults = await this.webSearch.search(searchQuery);
+
+        dataResponse.setWebResults(webSearchResults);
 
 
         apiResponse.setData(dataResponse);
@@ -80,23 +84,24 @@ export class ApiManagerService {
     return webResults;
   }
 
-  private webSearch(query: string): Promise<any> {
-    let url = this.configService.get<string>("WEB_SEARCH_API_URL");
-    let token = this.configService.get<string>("WEB_SEARCH_API_KEY");
-    let queryUrl = url + query.trim();
-    let headers = {
-      "x-rapidapi-host": "contextualwebsearch-websearch-v1.p.rapidapi.com",
-      "x-rapidapi-key": token,
-      "useQueryString": true
-    };
-    return new Promise((resolve, reject) => {
-      this.http
-        .get(queryUrl, {headers: headers})
-        .subscribe((res: any) => {
-          resolve(res.data);
-        })
-    });
-  }
+  // Keep this as backup
+  // private webSearch(query: string): Promise<any> {
+  //   let url = this.configService.get<string>("WEB_SEARCH_API_URL");
+  //   let token = this.configService.get<string>("WEB_SEARCH_API_KEY");
+  //   let queryUrl = url + query.trim();
+  //   let headers = {
+  //     "x-rapidapi-host": "contextualwebsearch-websearch-v1.p.rapidapi.com",
+  //     "x-rapidapi-key": token,
+  //     "useQueryString": true
+  //   };
+  //   return new Promise((resolve, reject) => {
+  //     this.http
+  //       .get(queryUrl, {headers: headers})
+  //       .subscribe((res: any) => {
+  //         resolve(res.data);
+  //       })
+  //   });
+  // }
 
   private spellCheck(query: string): Promise<any> {
     let url = this.configService.get<string>("SPELL_CHECK_API_URL");
