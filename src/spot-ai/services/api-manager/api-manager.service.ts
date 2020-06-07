@@ -131,7 +131,7 @@ export class ApiManagerService {
     let videos = this.dbService.findAllVideos();
     let resultVideos = []
     videos.forEach((video: VideoUrlDto) => {
-      let title = video.title.toLowerCase().replace(/[:-;|_@]/g, "");
+      let title = video.title.toLowerCase().replace(/[:-;|_@(),]/g, "");
       if (title.includes(query.topic) || title.includes(query.course)) {
         resultVideos.push(video);
       }
