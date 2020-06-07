@@ -6,6 +6,8 @@ import { VideoUrl } from 'src/spot-ai/models/video-url.model';
 
 @Injectable()
 export class DbService {
+
+  private readonly VIDEO_LIST = "videos";
   private db: any;
 
   constructor(configService: ConfigService) {
@@ -14,12 +16,22 @@ export class DbService {
 
   saveVideoUrl(url: Url): void {
     try {
-      this.db.loadCollections(["videos"]);
+      this.db.loadCollections([this.VIDEO_LIST]);
       let urlObj = new VideoUrl();
       urlObj.setUrl(url.getUrl())
       if (!this.db.videos.findOne(urlObj)) {
         return this.db.videos.save(url);
       }
+    }
+    catch (e) {
+      console.log(e);
+    }
+  }
+
+  findAllVideos() {
+    try {
+      this.db.loadCollections([this.VIDEO_LIST]);
+      return this.db.videos.find();
     }
     catch (e) {
       console.log(e);

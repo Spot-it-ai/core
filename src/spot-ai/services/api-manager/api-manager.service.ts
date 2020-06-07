@@ -1,15 +1,13 @@
 import { Injectable, HttpService } from '@nestjs/common';
 import * as fs from "fs";
 import * as childProcess from "child_process";
+import * as stemmer from 'stemmer';
 import { DbService } from 'src/utils/services/db/db.service';
 import { VideoUrlDto } from 'src/spot-ai/dto/video-url.dto';
 import { VideoUrl } from 'src/spot-ai/models/video-url.model';
 import { ConfigService } from '@nestjs/config';
-import { Observable } from 'rxjs';
-import { AxiosResponse } from 'axios';
 import { ApiResponse } from 'src/spot-ai/models/api-response.model';
 import { Data } from 'src/spot-ai/models/data.model';
-import { WebResult } from 'src/spot-ai/models/web-result.model';
 import { SearchResultsScrapperService } from '../search-results-scrapper/search-results-scrapper.service';
 
 @Injectable()
@@ -39,10 +37,15 @@ export class ApiManagerService {
         let correctQuery = await this.spellCheck(query);
         let searchQuery = correctQuery?.suggestion ?? query;
         let witAiResponse = await this.queryWitAi(searchQuery);
-        let webSearchResults = await this.webSearch.search(searchQuery);
+        let witProcessed = this.processWitAiResponse(witAiResponse);
 
-        dataResponse.setWebResults(webSearchResults);
+        let matchedVideos = this.findVideosMatchingSearch(witProcessed);
 
+        console.log(matchedVideos);
+
+        // @todo uncomment when needed to avoid hitting bing unnecessarily
+        // let webSearchResults = await this.webSearch.search(searchQuery);
+        // dataResponse.setWebResults(webSearchResults);
 
         apiResponse.setData(dataResponse);
         return apiResponse;
@@ -74,17 +77,37 @@ export class ApiManagerService {
     }
   }
 
-  private processWebResults(results: any[]): WebResult[] {
-    let webResults = []
-    results.forEach((result: any) => {
-      let r = new WebResult(result?.title, result?.url, result?.description);
-      webResults.push(r);
-    })
+  private processWitAiResponse(res: any) {
+    if (res) {
+      let entities = res?.entities;
+      if (entities["topic:topic"] && entities["course:course"]) {
+        let topic = entities["topic:topic"][0]?.value;
+        let course = entities["course:course"][0]?.value;
+        return {
+          topic: stemmer(topic),
+          course: stemmer(course)
+        }
+      }
+    }
 
-    return webResults;
+    return null;
   }
 
-  // Keep this as backup
+  private findVideosMatchingSearch(query: any) {
+    let videos = this.dbService.findAllVideos();
+    let resultVideos = []
+
+    videos.forEach((video: VideoUrlDto) => {
+      let title = video.title;
+      if (title.includes(query.topic) || title.includes(query.course)) {
+        resultVideos.push(video);
+      }
+    });
+
+    return resultVideos;
+  }
+
+  // @note: Keep this as backup
   // private webSearch(query: string): Promise<any> {
   //   let url = this.configService.get<string>("WEB_SEARCH_API_URL");
   //   let token = this.configService.get<string>("WEB_SEARCH_API_KEY");
