@@ -25,7 +25,10 @@ export class YoutubeCaptionsService {
         await this.extractEnglishSrt(captionsList) : null;
       let jsonSrt = xmlSrt ? await this.xmlToJson(xmlSrt) : null;
       if (jsonSrt) {
-        this.db.saveVideoTranscription(video.getVideoId(), jsonSrt);
+        this.db.saveVideoTranscription(
+          video.getVideoId(),
+          jsonSrt?.transcript?.text
+        );
         return true;
       }
 

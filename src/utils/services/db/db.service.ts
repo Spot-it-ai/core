@@ -32,9 +32,19 @@ export class DbService {
   saveVideoTranscription(videoId: string, json: any): void {
     try {
       let collection = this.VIDEO_TRANSCRIPTIONS + videoId;
-      console.log(collection);
       this.db.loadCollections([collection]);
-      this.db[collection].save(json);
+      return this.db[collection].save(json);
+    }
+    catch (e) {
+      console.log(e);
+    }
+  }
+
+  findVideoTranscriptions(videoId: string): any[] {
+    try {
+      let collection = this.VIDEO_TRANSCRIPTIONS + videoId;
+      this.db.loadCollections([collection]);
+      return this.db[collection].find();
     }
     catch (e) {
       console.log(e);

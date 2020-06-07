@@ -10,6 +10,7 @@ import { ApiResponse } from 'src/spot-ai/models/api-response.model';
 import { Data } from 'src/spot-ai/models/data.model';
 import { SearchResultsScrapperService } from '../search-results-scrapper/search-results-scrapper.service';
 import { YoutubeCaptionsService } from '../youtube-captions/youtube-captions.service';
+import { Video } from 'src/spot-ai/models/video.model';
 
 @Injectable()
 export class ApiManagerService {
@@ -45,11 +46,13 @@ export class ApiManagerService {
 
         let matchedVideos = this.findVideosMatchingSearch(witProcessed);
 
-        this.findQueryInVideoTranscriptions(witProcessed, matchedVideos);
+        let lectureVideos =
+            this.findQueryInVideoTranscriptions(witProcessed, matchedVideos);
 
         // @todo uncomment when needed to avoid hitting bing unnecessarily
         // let webSearchResults = await this.webSearch.search(searchQuery);
         // dataResponse.setWebResults(webSearchResults);
+        dataResponse.setLectureVideos(lectureVideos);
 
         apiResponse.setData(dataResponse);
         return apiResponse;
@@ -65,10 +68,12 @@ export class ApiManagerService {
 
   saveVideoUrl(urlDto: VideoUrlDto): void {
     if (urlDto.title.trim() && urlDto.url.trim()) {
-      let videoUrl = new VideoUrl();
-      videoUrl.setUrl(urlDto.url.trim());
-      videoUrl.setTitle(urlDto.title.trim());
-      videoUrl.setVideoId(this.getVideoId(urlDto.url.trim()));
+      let videoUrl = new VideoUrl(
+        urlDto.title.trim(),
+        urlDto.url.trim(),
+        this.getVideoId(urlDto.url.trim())
+      );
+      
       try {
         if (this.youtubeCaptions.transcribe(videoUrl)) {
           return this.dbService.saveVideoUrl(videoUrl);
@@ -90,8 +95,8 @@ export class ApiManagerService {
         let topic = entities["topic:topic"][0]?.value;
         let course = entities["course:course"][0]?.value;
         return {
-          topic: stemmer(topic),
-          course: stemmer(course)
+          topic: stemmer(topic.toLowerCase()),
+          course: stemmer(course.toLowerCase())
         }
       }
     }
@@ -99,16 +104,34 @@ export class ApiManagerService {
     return null;
   }
 
-  private findQueryInVideoTranscriptions(query: any, videos: VideoUrlDto[]) {
-  
+  private findQueryInVideoTranscriptions(
+    query: any,
+    videos: VideoUrlDto[]
+  ): Video[]
+  {
+    let videosResult = [];
+    videos.forEach((video: VideoUrlDto) => {
+      let v = new Video(video.id, video.title, video.url);
+      let transcriptions = this.dbService.findVideoTranscriptions(video.id);
+      transcriptions.forEach((transcription: any) => {
+        if (transcription?._?.toLowerCase()?.includes(query.topic)) {
+          v.addStartTime(transcription?.$?.start);
+        }
+      });
+
+      if (v.getStartTime().length > 0) {
+        videosResult.push(v);
+      }
+    });
+
+    return videosResult;
   }
 
   private findVideosMatchingSearch(query: any) {
     let videos = this.dbService.findAllVideos();
     let resultVideos = []
-
     videos.forEach((video: VideoUrlDto) => {
-      let title = video.title;
+      let title = video.title.toLowerCase().replace(/[:-;|_@]/g, "");
       if (title.includes(query.topic) || title.includes(query.course)) {
         resultVideos.push(video);
       }
