@@ -73,7 +73,7 @@ export class ApiManagerService {
         urlDto.url.trim(),
         this.getVideoId(urlDto.url.trim())
       );
-      
+
       try {
         if (this.youtubeCaptions.transcribe(videoUrl)) {
           return this.dbService.saveVideoUrl(videoUrl);
@@ -111,7 +111,7 @@ export class ApiManagerService {
   {
     let videosResult = [];
     videos.forEach((video: VideoUrlDto) => {
-      let v = new Video(video.id, video.title, video.url);
+      let v = new Video(video.title, video.url, video.id);
       let transcriptions = this.dbService.findVideoTranscriptions(video.id);
       transcriptions.forEach((transcription: any) => {
         if (transcription?._?.toLowerCase()?.includes(query.topic)) {
