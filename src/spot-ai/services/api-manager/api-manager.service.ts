@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { ApiResponse } from 'src/spot-ai/models/api-response.model';
 import { Data } from 'src/spot-ai/models/data.model';
 import { SearchResultsScrapperService } from '../search-results-scrapper/search-results-scrapper.service';
+import { YoutubeCaptionsService } from '../youtube-captions/youtube-captions.service';
 
 @Injectable()
 export class ApiManagerService {
@@ -16,17 +17,20 @@ export class ApiManagerService {
   private configService: ConfigService;
   private http: HttpService;
   private webSearch: SearchResultsScrapperService;
+  private youtubeCaptions: YoutubeCaptionsService;
 
   constructor(
     dbService: DbService,
     configService: ConfigService,
     http: HttpService,
-    webSearch: SearchResultsScrapperService
+    webSearch: SearchResultsScrapperService,
+    youtubeCaptions: YoutubeCaptionsService
   ) {
     this.dbService = dbService;
     this.configService = configService;
     this.http = http;
     this.webSearch = webSearch;
+    this.youtubeCaptions = youtubeCaptions;
   }
 
   async searchQuery(query: string): Promise<ApiResponse> {
@@ -41,7 +45,7 @@ export class ApiManagerService {
 
         let matchedVideos = this.findVideosMatchingSearch(witProcessed);
 
-        console.log(matchedVideos);
+        this.findQueryInVideoTranscriptions(witProcessed, matchedVideos);
 
         // @todo uncomment when needed to avoid hitting bing unnecessarily
         // let webSearchResults = await this.webSearch.search(searchQuery);
@@ -64,9 +68,11 @@ export class ApiManagerService {
       let videoUrl = new VideoUrl();
       videoUrl.setUrl(urlDto.url.trim());
       videoUrl.setTitle(urlDto.title.trim());
+      videoUrl.setVideoId(this.getVideoId(urlDto.url.trim()));
       try {
-        this.transcribeVideo(videoUrl.getUrl());
-        return this.dbService.saveVideoUrl(videoUrl);
+        if (this.youtubeCaptions.transcribe(videoUrl)) {
+          return this.dbService.saveVideoUrl(videoUrl);
+        }
       }
       catch (e) {
         console.log(e);
@@ -91,6 +97,10 @@ export class ApiManagerService {
     }
 
     return null;
+  }
+
+  private findQueryInVideoTranscriptions(query: any, videos: VideoUrlDto[]) {
+  
   }
 
   private findVideosMatchingSearch(query: any) {
@@ -156,18 +166,6 @@ export class ApiManagerService {
           resolve(res.data);
         })
     });
-  }
-
-  private transcribeVideo(url: string): void {
-    let videoId = this.getVideoId(url);
-    if (!this.hasVideoAlreadyTranscribed(videoId)) {
-      try {
-        childProcess.spawn("python", ["./transcribe.py", videoId]);
-      }
-      catch (e) {
-        console.log(e);
-      }
-    }
   }
 
   private hasVideoAlreadyTranscribed(videoId: string): boolean {

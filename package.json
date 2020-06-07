@@ -27,12 +27,14 @@
     "@nestjs/platform-express": "^7.0.0",
     "axios": "^0.19.2",
     "diskdb": "^0.1.17",
+    "form-urlencoded": "^4.1.4",
     "jsdom": "^16.2.2",
     "node-fetch": "^2.6.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^6.5.4",
-    "stemmer": "^1.0.5"
+    "stemmer": "^1.0.5",
+    "xml2js": "^0.4.23"
   },
   "devDependencies": {
     "@nestjs/cli": "^7.0.0",

@@ -8,6 +8,7 @@ import { VideoUrl } from 'src/spot-ai/models/video-url.model';
 export class DbService {
 
   private readonly VIDEO_LIST = "videos";
+  private readonly VIDEO_TRANSCRIPTIONS = "/transcriptions/";
   private db: any;
 
   constructor(configService: ConfigService) {
@@ -28,6 +29,18 @@ export class DbService {
     }
   }
 
+  saveVideoTranscription(videoId: string, json: any): void {
+    try {
+      let collection = this.VIDEO_TRANSCRIPTIONS + videoId;
+      console.log(collection);
+      this.db.loadCollections([collection]);
+      this.db[collection].save(json);
+    }
+    catch (e) {
+      console.log(e);
+    }
+  }
+
   findAllVideos() {
     try {
       this.db.loadCollections([this.VIDEO_LIST]);
@@ -37,5 +50,4 @@ export class DbService {
       console.log(e);
     }
   }
-
 }

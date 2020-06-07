@@ -1,4 +1,4 @@
-import { Injectable, HttpService } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { WebResult } from 'src/spot-ai/models/web-result.model';
 import { ConfigService } from '@nestjs/config';
 import { JSDOM } from 'jsdom';
@@ -16,17 +16,16 @@ export class SearchResultsScrapperService {
   private readonly DESCRIPTION_CLASS = "p";
 
   private configService: ConfigService;
-  private http: HttpService;
 
-  constructor(configService: ConfigService, http: HttpService) {
+  constructor(configService: ConfigService) {
     this.configService = configService;
-    this.http = http;
   }
 
   async search(query: string): Promise<WebResult[]> {
     try {
       let searchResults = await this.getResultsFromSearchEngine(query);
-      return this.extractResults(searchResults);
+      let results = searchResults ? this.extractResults(searchResults) : null;
+      return results;
     }
     catch (e) {
       console.log(e);
@@ -44,7 +43,7 @@ export class SearchResultsScrapperService {
         "Accept-Encoding": "gzip, deflate, br",
         "Accept": "test/html,application/xhtml+xml,\
         application/xml;q=0.9,*/*;q=0.8",
-        "Referer": "http://www.google.com/",
+        "Referer": "https://www.bing.com/",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
         AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
       }

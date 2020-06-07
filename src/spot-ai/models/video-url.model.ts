@@ -1,8 +1,9 @@
 import { Url } from "src/utils/interfaces/url.interface";
 
 export class VideoUrl implements Url {
-  private title: string;
-  private url: string;
+  protected title: string;
+  protected url: string;
+  protected id: string;
 
   getTitle(): string {
     return this.title;
@@ -18,5 +19,13 @@ export class VideoUrl implements Url {
 
   setTitle(title: string): void {
     this.title = title;
+  }
+
+  setVideoId(id: string): void {
+    this.id = id
+  }
+
+  getVideoId(): string {
+    return this.id;
   }
 }
