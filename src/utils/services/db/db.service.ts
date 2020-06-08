@@ -40,6 +40,17 @@ export class DbService {
     }
   }
 
+  findTotalCountofTranscriptions(videoId: string): number {
+    try {
+      let collection = this.VIDEO_TRANSCRIPTIONS + videoId;
+      this.db.loadCollections([collection]);
+      return this.db[collection].count();
+    }
+    catch (e) {
+      console.log(e);
+    }
+  }
+
   findVideoTranscriptions(videoId: string): any[] {
     try {
       let collection = this.VIDEO_TRANSCRIPTIONS + videoId;

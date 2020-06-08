@@ -120,6 +120,14 @@ export class ApiManagerService {
       });
 
       if (v.getStartTime().length > 0) {
+        let total = this.dbService.findTotalCountofTranscriptions(video.id);
+        console.log(total);
+        console.log(v.getStartTime().length)
+        console.log(v.getStartTime().length / total);
+        if (v.getStartTime().length / total > 0.15) {
+          // watch full video if more than 15% of the transcriptions match
+          v.setWatchFull(true);
+        }
         videosResult.push(v);
       }
     });
