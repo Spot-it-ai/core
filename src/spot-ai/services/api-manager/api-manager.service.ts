@@ -11,6 +11,7 @@ import { Data } from 'src/spot-ai/models/data.model';
 import { SearchResultsScrapperService } from '../search-results-scrapper/search-results-scrapper.service';
 import { YoutubeCaptionsService } from '../youtube-captions/youtube-captions.service';
 import { Video } from 'src/spot-ai/models/video.model';
+import { YoutubeSearchService } from '../youtube-search/youtube-search.service';
 
 @Injectable()
 export class ApiManagerService {
@@ -19,19 +20,22 @@ export class ApiManagerService {
   private http: HttpService;
   private webSearch: SearchResultsScrapperService;
   private youtubeCaptions: YoutubeCaptionsService;
+  private youtubeSearch: YoutubeSearchService;
 
   constructor(
     dbService: DbService,
     configService: ConfigService,
     http: HttpService,
     webSearch: SearchResultsScrapperService,
-    youtubeCaptions: YoutubeCaptionsService
+    youtubeCaptions: YoutubeCaptionsService,
+    youtubeSearch: YoutubeSearchService
   ) {
     this.dbService = dbService;
     this.configService = configService;
     this.http = http;
     this.webSearch = webSearch;
     this.youtubeCaptions = youtubeCaptions;
+    this.youtubeSearch = youtubeSearch;
   }
 
   async searchQuery(query: string): Promise<ApiResponse> {
@@ -44,18 +48,31 @@ export class ApiManagerService {
         let witAiResponse = await this.queryWitAi(searchQuery);
         let witProcessed = this.processWitAiResponse(witAiResponse);
 
-        let matchedVideos = this.findVideosMatchingSearch(witProcessed);
+        if (witProcessed) {
+          console.log(witProcessed);
+          let shortenedQuery = witProcessed.topic + " " + witProcessed.course;
+          let matchedVideos = this.findVideosMatchingSearch(witProcessed);
 
-        let lectureVideos =
-            this.findQueryInVideoTranscriptions(witProcessed, matchedVideos);
+          let lectureVideos =
+              this.findQueryInVideoTranscriptions(witProcessed, matchedVideos);
+          dataResponse.setLectureVideos(lectureVideos);
 
-        // @todo uncomment when needed to avoid hitting bing unnecessarily
-        // let webSearchResults = await this.webSearch.search(searchQuery);
-        // dataResponse.setWebResults(webSearchResults);
-        dataResponse.setLectureVideos(lectureVideos);
+          // @todo uncomment when needed to avoid hitting bing unnecessarily
+          let webSearchResults = await this.webSearch.search(shortenedQuery);
+          dataResponse.setWebResults(webSearchResults);
 
-        apiResponse.setData(dataResponse);
-        return apiResponse;
+
+          let youtubeResults = await this.youtubeSearch.searchYoutube(
+            shortenedQuery
+          );
+          dataResponse.setYoutuubeResults(youtubeResults);
+
+          apiResponse.setData(dataResponse);
+          return apiResponse;
+        }
+        else {
+          // show error
+        }
       }
       catch (e) {
         console.log(e);
@@ -95,8 +112,12 @@ export class ApiManagerService {
         let topic = entities["topic:topic"][0]?.value;
         let course = entities["course:course"][0]?.value;
         return {
-          topic: stemmer(topic.toLowerCase()),
-          course: stemmer(course.toLowerCase())
+          stemmed : {
+            topic: stemmer(topic.toLowerCase()),
+            course: stemmer(course.toLowerCase()),
+          },
+          topic: topic.toLowerCase(),
+          course: course.toLowerCase(),
         }
       }
     }
@@ -114,7 +135,7 @@ export class ApiManagerService {
       let v = new Video(video.title, video.url, video.id);
       let transcriptions = this.dbService.findVideoTranscriptions(video.id);
       transcriptions.forEach((transcription: any) => {
-        if (transcription?._?.toLowerCase()?.includes(query.topic)) {
+        if (transcription?._?.toLowerCase()?.includes(query?.stemmed?.topic)) {
           v.addStartTime(transcription?.$?.start);
         }
       });
@@ -139,8 +160,9 @@ export class ApiManagerService {
     let videos = this.dbService.findAllVideos();
     let resultVideos = []
     videos.forEach((video: VideoUrlDto) => {
+      let stemmed = query?.stemmed;
       let title = video.title.toLowerCase().replace(/[:-;|_@(),]/g, "");
-      if (title.includes(query.topic) || title.includes(query.course)) {
+      if (title.includes(stemmed?.topic) || title.includes(stemmed?.course)) {
         resultVideos.push(video);
       }
     });

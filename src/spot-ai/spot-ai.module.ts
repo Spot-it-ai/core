@@ -4,6 +4,7 @@ import { ApiManagerService } from './services/api-manager/api-manager.service';
 import { UtilsModule } from 'src/utils/utils.module';
 import { SearchResultsScrapperService } from './services/search-results-scrapper/search-results-scrapper.service';
 import { YoutubeCaptionsService } from './services/youtube-captions/youtube-captions.service';
+import { YoutubeSearchService } from './services/youtube-search/youtube-search.service';
 
 @Module({
   imports: [UtilsModule, HttpModule],
@@ -11,7 +12,8 @@ import { YoutubeCaptionsService } from './services/youtube-captions/youtube-capt
   providers: [
     ApiManagerService,
     SearchResultsScrapperService,
-    YoutubeCaptionsService
+    YoutubeCaptionsService,
+    YoutubeSearchService
   ],
 })
 export class SpotAiModule {}

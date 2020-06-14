@@ -3,6 +3,10 @@ import { VideoUrl } from "./video-url.model";
 export class Video extends VideoUrl {
   private startTimes: number[];
   private isWatchFull: boolean;
+  private thumbnails: [];
+  private description: string;
+  private publishTime: string;
+  private channelName: string;
 
   constructor(title: string, url: string, id?: string) {
     super(title, url, id);
@@ -29,5 +33,21 @@ export class Video extends VideoUrl {
     else {
       this.startTimes = [time];
     }
+  }
+
+  setThumbnails(thumbnails: []): void {
+    this.thumbnails = thumbnails;
+  }
+
+  setChannelName(name: string): void {
+    this.channelName = name;
+  }
+
+  setDescription(desc: string): void {
+    this.description = desc;
+  }
+
+  setPublishTime(time: string): void {
+    this.publishTime = time;
   }
 }
