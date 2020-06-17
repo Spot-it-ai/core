@@ -5,6 +5,7 @@ import { UtilsModule } from 'src/utils/utils.module';
 import { SearchResultsScrapperService } from './services/search-results-scrapper/search-results-scrapper.service';
 import { YoutubeCaptionsService } from './services/youtube-captions/youtube-captions.service';
 import { YoutubeSearchService } from './services/youtube-search/youtube-search.service';
+import { JwtTokenService } from './services/jwt-token/jwt-token.service';
 
 @Module({
   imports: [UtilsModule, HttpModule],
@@ -13,7 +14,8 @@ import { YoutubeSearchService } from './services/youtube-search/youtube-search.s
     ApiManagerService,
     SearchResultsScrapperService,
     YoutubeCaptionsService,
-    YoutubeSearchService
+    YoutubeSearchService,
+    JwtTokenService
   ],
 })
 export class SpotAiModule {}

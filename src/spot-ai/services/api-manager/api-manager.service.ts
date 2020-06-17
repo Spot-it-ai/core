@@ -1,6 +1,7 @@
 import { Injectable, HttpService } from '@nestjs/common';
 import * as fs from "fs";
 import * as childProcess from "child_process";
+import * as argon2 from "argon2";
 import * as stemmer from 'stemmer';
 import { DbService } from 'src/utils/services/db/db.service';
 import { VideoUrlDto } from 'src/spot-ai/dto/video-url.dto';
@@ -12,6 +13,8 @@ import { SearchResultsScrapperService } from '../search-results-scrapper/search-
 import { YoutubeCaptionsService } from '../youtube-captions/youtube-captions.service';
 import { Video } from 'src/spot-ai/models/video.model';
 import { YoutubeSearchService } from '../youtube-search/youtube-search.service';
+import { LoginDto } from 'src/spot-ai/dto/login.dto';
+import { JwtTokenService } from '../jwt-token/jwt-token.service';
 
 @Injectable()
 export class ApiManagerService {
@@ -21,6 +24,7 @@ export class ApiManagerService {
   private webSearch: SearchResultsScrapperService;
   private youtubeCaptions: YoutubeCaptionsService;
   private youtubeSearch: YoutubeSearchService;
+  private jwtToken: JwtTokenService;
 
   constructor(
     dbService: DbService,
@@ -28,7 +32,8 @@ export class ApiManagerService {
     http: HttpService,
     webSearch: SearchResultsScrapperService,
     youtubeCaptions: YoutubeCaptionsService,
-    youtubeSearch: YoutubeSearchService
+    youtubeSearch: YoutubeSearchService,
+    jwtToken: JwtTokenService
   ) {
     this.dbService = dbService;
     this.configService = configService;
@@ -36,6 +41,7 @@ export class ApiManagerService {
     this.webSearch = webSearch;
     this.youtubeCaptions = youtubeCaptions;
     this.youtubeSearch = youtubeSearch;
+    this.jwtToken = jwtToken;
   }
 
   async searchQuery(query: string): Promise<ApiResponse> {
@@ -102,6 +108,30 @@ export class ApiManagerService {
     }
   }
 
+  async loginUser(loginDto: LoginDto): Promise<ApiResponse> {
+    let apiResponse = new ApiResponse();
+    let dataResponse = new Data();
+    if (loginDto.username && loginDto.password) {
+      if (await this.validatePwd(loginDto.password)) {
+        let secret = this.configService.get<string>("TOKEN_SECRET");
+        let username = this.configService.get<string>("USERNAME");
+        let token = this.jwtToken.sign(
+          { user: username},
+          secret
+        )
+        dataResponse.setToken(token);
+        apiResponse.setData(dataResponse);
+        return apiResponse;
+      }
+      else {
+        return null;
+      }
+    }
+    else {
+      return null;
+    }
+  }
+
   saveVideoUrl(urlDto: VideoUrlDto): ApiResponse {
     if (urlDto.title.trim() && urlDto.url.trim()) {
       let videoUrl = new VideoUrl(
@@ -125,6 +155,16 @@ export class ApiManagerService {
     }
     else {
       // error
+    }
+  }
+
+  private async validatePwd(password: string): Promise<boolean> {
+    try {
+      let hash = this.configService.get<string>("PASSWORD");
+      return await argon2.verify(hash, password);
+    }
+    catch (e) {
+      console.log(e);
     }
   }
 

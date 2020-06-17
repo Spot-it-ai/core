@@ -7,12 +7,17 @@ export class Data {
   private lectureVideos: Video[];
   private youtubeResults: Video[];
   private allVideos: VideoUrl[];
+  private token: string;
 
   constructor() {
     this.webResults = [];
     this.lectureVideos = [];
     this.youtubeResults = [];
     this.allVideos = [];
+  }
+
+  setToken(token: string): void {
+    this.token = token;
   }
 
   setWebResults(results: WebResult[]): void {
