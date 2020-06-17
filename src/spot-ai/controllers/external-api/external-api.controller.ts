@@ -11,13 +11,18 @@ export class ExternalApiController {
     this.apiManager = apiManager;
   }
 
-  @Post("video-url")
-  saveVideoUrl(@Body() videoUrlDto: VideoUrlDto): void {
+  @Post("video")
+  saveVideoUrl(@Body() videoUrlDto: VideoUrlDto): ApiResponse {
     return this.apiManager.saveVideoUrl(videoUrlDto)
   }
 
   @Get("search")
   async search(@Query("query") query: string): Promise<ApiResponse> {
     return await this.apiManager.searchQuery(query);
+  }
+
+  @Get("video")
+  getAllVideos(): ApiResponse {
+    return this.apiManager.getAllVideos();
   }
 }

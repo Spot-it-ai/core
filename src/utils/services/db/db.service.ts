@@ -15,14 +15,24 @@ export class DbService {
     this.db = diskDb.connect(configService.get<string>("DB_PATH"));
   }
 
-  saveVideoUrl(url: Url): void {
+  saveVideoUrl(url: Url) {
     try {
       this.db.loadCollections([this.VIDEO_LIST]);
       let urlObj = new VideoUrl();
       urlObj.setUrl(url.getUrl())
-      if (!this.db.videos.findOne(urlObj)) {
-        return this.db.videos.save(url);
+      if (!this.db[this.VIDEO_LIST].findOne(urlObj)) {
+        return this.db[this.VIDEO_LIST].save(url);
       }
+    }
+    catch (e) {
+      console.log(e);
+    }
+  }
+
+  getAllVideos() {
+    try {
+      this.db.loadCollections([this.VIDEO_LIST]);
+      return this.db[this.VIDEO_LIST].find();
     }
     catch (e) {
       console.log(e);

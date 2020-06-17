@@ -83,17 +83,40 @@ export class ApiManagerService {
     }
   }
 
-  saveVideoUrl(urlDto: VideoUrlDto): void {
+  getAllVideos(): ApiResponse {
+    let apiResponse = new ApiResponse();
+    let dataResponse = new Data();
+    try {
+      let res = [];
+      let videos = this.dbService.findAllVideos();
+      videos.forEach((v: any) => {
+        let video = new VideoUrl(v.title, v.url, v.id);
+        res.push(video);
+      })
+      dataResponse.setAllVideos(res);
+      apiResponse.setData(dataResponse);
+      return apiResponse;
+    }
+    catch (e) {
+      console.log(e);
+    }
+  }
+
+  saveVideoUrl(urlDto: VideoUrlDto): ApiResponse {
     if (urlDto.title.trim() && urlDto.url.trim()) {
       let videoUrl = new VideoUrl(
         urlDto.title.trim(),
         urlDto.url.trim(),
         this.getVideoId(urlDto.url.trim())
       );
+      let apiResponse = new ApiResponse();
+      let dataResponse = new Data();
 
       try {
         if (this.youtubeCaptions.transcribe(videoUrl)) {
-          return this.dbService.saveVideoUrl(videoUrl);
+          if (this.dbService.saveVideoUrl(videoUrl)) {
+            return apiResponse;
+          }
         }
       }
       catch (e) {
