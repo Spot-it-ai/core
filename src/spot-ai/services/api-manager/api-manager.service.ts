@@ -89,6 +89,23 @@ export class ApiManagerService {
     }
   }
 
+  deleteVideo(id: string): ApiResponse {
+    let apiResponse = new ApiResponse();
+    try {
+      console.log(id);
+      if (this.dbService.deleteVideo(id)) {
+        apiResponse.setData(null);
+        return apiResponse;
+      }
+      else {
+        return null;
+      }
+    }
+    catch (e) {
+      console.log(e);
+    }
+  }
+
   getAllVideos(): ApiResponse {
     let apiResponse = new ApiResponse();
     let dataResponse = new Data();
@@ -96,7 +113,7 @@ export class ApiManagerService {
       let res = [];
       let videos = this.dbService.findAllVideos();
       videos.forEach((v: any) => {
-        let video = new VideoUrl(v.title, v.url, v.id);
+        let video = new VideoUrl(v.title, v.url, v.id, v._id);
         res.push(video);
       })
       dataResponse.setAllVideos(res);

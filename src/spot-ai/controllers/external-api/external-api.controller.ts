@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, UseGuards, Delete, Param } from '@nestjs/common';
 import { ApiManagerService } from 'src/spot-ai/services/api-manager/api-manager.service';
 import { VideoUrlDto } from 'src/spot-ai/dto/video-url.dto';
 import { ApiResponse } from 'src/spot-ai/models/api-response.model';
@@ -34,5 +34,11 @@ export class ExternalApiController {
   @UseGuards(AuthGuard)
   getAllVideos(): ApiResponse {
     return this.apiManager.getAllVideos();
+  }
+
+  @Delete("video/:videoDbId")
+  @UseGuards(AuthGuard)
+  deleteVideos(@Param("videoDbId") videoDbId: string): ApiResponse {
+    return this.apiManager.deleteVideo(videoDbId);
   }
 }

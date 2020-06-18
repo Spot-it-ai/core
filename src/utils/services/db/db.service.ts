@@ -15,6 +15,20 @@ export class DbService {
     this.db = diskDb.connect(configService.get<string>("DB_PATH"));
   }
 
+  deleteVideo(id: string) {
+    try {
+      this.db.loadCollections([this.VIDEO_LIST]);
+      let video = this.db[this.VIDEO_LIST].findOne({_id: id});
+      let transcription = this.VIDEO_TRANSCRIPTIONS + video.id;
+      this.db[this.VIDEO_LIST].remove({_id: id});
+      this.db.loadCollections([transcription]);
+      return this.db[transcription].remove();
+    }
+    catch (e) {
+      console.log(e);
+    }
+  }
+
   saveVideoUrl(url: Url) {
     try {
       this.db.loadCollections([this.VIDEO_LIST]);
