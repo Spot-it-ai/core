@@ -6,6 +6,7 @@ import { JSDOM } from 'jsdom';
 import formurlencoded from 'form-urlencoded';
 import * as xml2js from 'xml2js';
 import { DbService } from 'src/utils/services/db/db.service';
+import { getSubtitles } from 'youtube-captions-scraper';
 
 @Injectable()
 export class YoutubeCaptionsService {
@@ -20,16 +21,31 @@ export class YoutubeCaptionsService {
 
   async transcribe(video: VideoUrl): Promise<boolean> {
     try {
-      let captionsList = await this.getCaptionsListSrt(video);
-      let xmlSrt = captionsList ?
-        await this.extractEnglishSrt(captionsList) : null;
-      let jsonSrt = xmlSrt ? await this.xmlToJson(xmlSrt) : null;
-      if (jsonSrt) {
-        this.db.saveVideoTranscription(
-          video.getVideoId(),
-          jsonSrt?.transcript?.text
-        );
+      let jsonSrt = await getSubtitles({
+                      videoID: video.getVideoId(), // youtube video id
+                      lang: 'en' // default: `en`
+                    });
+
+        if (jsonSrt) {
+          this.db.saveVideoTranscription(
+            video.getVideoId(),
+            jsonSrt
+          );
         return true;
+      }
+      else {
+        let captionsList = await this.getCaptionsListSrt(video);
+        let xmlSrt = captionsList ?
+          await this.extractEnglishSrt(captionsList) : null;
+        let jsonSrt = xmlSrt ? await this.xmlToJson(xmlSrt) : null;
+        if (jsonSrt) {
+          this.db.saveVideoTranscription(
+            video.getVideoId(),
+            jsonSrt?.transcript?.text
+          );
+
+          return true;
+        }
       }
 
       return false;

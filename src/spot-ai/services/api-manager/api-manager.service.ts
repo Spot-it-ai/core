@@ -214,20 +214,25 @@ export class ApiManagerService {
     videos.forEach((video: VideoUrlDto) => {
       let v = new Video(video.title, video.url, video.id);
       let transcriptions = this.dbService.findVideoTranscriptions(video.id);
-      let lastFind = Number(transcriptions[0]?.$?.start?.split(".")[0]);
+      let lastFind = Number(transcriptions[0]?.start?.split(".")[0])  ??
+        Number(transcriptions[0]?.$?.start?.split(".")[0]);
+
       if (lastFind <= 300) {
         // if video is less than 5 mins long, then watch full
         v.setWatchFull(true);
         videosResult.push(v);
       }
       else {
+        lastFind = 0;
         let lastFindDiff = 300; // 5 minutes
-        transcriptions.forEach((transcription: any) => {
-          let time = transcription?.$?.start?.split(".")[0];
-          if (transcription?._?.toLowerCase()?.includes(query?.stemmed?.topic) &&
-              Number(time) < lastFind
+        transcriptions.reverse().forEach((transcription: any) => {
+          let time = transcription?.start?.split(".")[0] ??
+            transcription?.$?.start?.split(".")[0];
+          let t = transcription?.text ?? transcription?._;
+          if (t?.toLowerCase()?.includes(query?.stemmed?.topic) &&
+              Number(time) > lastFind
             ) {
-              lastFind = Number(time) - lastFindDiff;
+              lastFind = Number(time) + lastFindDiff;
             v.addStartTime(Number(time));
           }
         });
@@ -237,7 +242,6 @@ export class ApiManagerService {
           // console.log(total);
           // console.log(v.getStartTime().length)
           // console.log(v.getStartTime().length / total);
-          v.getStartTime().sort();
           if (v.getStartTime().length / total > 0.20) {
             // watch full video if more than 15% of the transcriptions match
             v.setWatchFull(true);

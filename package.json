@@ -36,7 +36,8 @@
     "rimraf": "^3.0.2",
     "rxjs": "^6.5.4",
     "stemmer": "^1.0.5",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.4.23",
+    "youtube-captions-scraper": "^1.0.3"
   },
   "devDependencies": {
     "@nestjs/cli": "^7.0.0",
