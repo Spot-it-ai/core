@@ -1,0 +1,33 @@
+import { HttpService } from '@nestjs/common';
+import { DbService } from 'src/utils/services/db/db.service';
+import { VideoUrlDto } from 'src/spot-ai/dto/video-url.dto';
+import { ConfigService } from '@nestjs/config';
+import { ApiResponse } from 'src/spot-ai/models/api-response.model';
+import { SearchResultsScrapperService } from '../search-results-scrapper/search-results-scrapper.service';
+import { YoutubeCaptionsService } from '../youtube-captions/youtube-captions.service';
+import { YoutubeSearchService } from '../youtube-search/youtube-search.service';
+import { LoginDto } from 'src/spot-ai/dto/login.dto';
+import { JwtTokenService } from '../jwt-token/jwt-token.service';
+export declare class ApiManagerService {
+    private dbService;
+    private configService;
+    private http;
+    private webSearch;
+    private youtubeCaptions;
+    private youtubeSearch;
+    private jwtToken;
+    constructor(dbService: DbService, configService: ConfigService, http: HttpService, webSearch: SearchResultsScrapperService, youtubeCaptions: YoutubeCaptionsService, youtubeSearch: YoutubeSearchService, jwtToken: JwtTokenService);
+    searchQuery(query: string): Promise<ApiResponse>;
+    deleteVideo(id: string): ApiResponse;
+    getAllVideos(): ApiResponse;
+    loginUser(loginDto: LoginDto): Promise<ApiResponse>;
+    saveVideoUrl(urlDto: VideoUrlDto): ApiResponse;
+    private validatePwd;
+    private processWitAiResponse;
+    private findQueryInVideoTranscriptions;
+    private findVideosMatchingSearch;
+    private spellCheck;
+    private queryWitAi;
+    private hasVideoAlreadyTranscribed;
+    private getVideoId;
+}
