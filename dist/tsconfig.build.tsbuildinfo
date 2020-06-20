@@ -1537,7 +1537,7 @@
         "affectsGlobalScope": false
       },
       "../src/spot-ai/services/api-manager/api-manager.service.ts": {
-        "version": "969d013dec5959db4a40e11a1b56433a0c80dded1f4df2050e7dc1571c3b294c",
+        "version": "15af5a782e1a0aa1d69f5bf10e279d04bd4bc3fddf22293358e58cc2caaeac51",
         "signature": "6086c570717ed4075dfc8516fc65b95238ddc73de77dd8100f6ed3db7031a7e5",
         "affectsGlobalScope": false
       },

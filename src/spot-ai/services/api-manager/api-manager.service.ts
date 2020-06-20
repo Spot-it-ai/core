@@ -128,7 +128,10 @@ export class ApiManagerService {
   async loginUser(loginDto: LoginDto): Promise<ApiResponse> {
     let apiResponse = new ApiResponse();
     let dataResponse = new Data();
-    let username = this.configService.get<string>("USER_NAME");
+    let username = this.configService.get<string>("USERNAME");
+    console.log(loginDto.username ===  username);
+    console.log(loginDto.username);
+    console.log(username);
     if (loginDto.username && loginDto.username ===  username && loginDto.password) {
       if (await this.validatePwd(loginDto.password)) {
         let secret = this.configService.get<string>("TOKEN_SECRET");
