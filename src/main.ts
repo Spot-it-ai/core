@@ -6,6 +6,6 @@ async function bootstrap() {
     AppModule,
     { cors: { origin: ["http://127.0.0.1:3000"] }}
   );
-  await app.listen(3001);
+  await app.listen(( process.env.PORT || 3001 ));
 }
 bootstrap();
