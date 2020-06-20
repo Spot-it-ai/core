@@ -11,7 +11,10 @@ const common_1 = require("@nestjs/common");
 let AppService = (() => {
     let AppService = class AppService {
         getHello() {
-            return 'Hello World!';
+            return {
+                meta: 200,
+                data: "Hello World!! I am spot-it v1"
+            };
         }
     };
     AppService = __decorate([

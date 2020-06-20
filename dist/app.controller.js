@@ -22,10 +22,10 @@ let AppController = (() => {
         }
     };
     __decorate([
-        common_1.Get(),
+        common_1.Get("/"),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", []),
-        __metadata("design:returntype", String)
+        __metadata("design:returntype", void 0)
     ], AppController.prototype, "getHello", null);
     AppController = __decorate([
         common_1.Controller(),
